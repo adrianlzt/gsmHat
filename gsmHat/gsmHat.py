@@ -59,9 +59,10 @@ class GSMHat:
     cSMSwaittime = 2500             # milliseconds
     cGPRSstatusWaittime = 5000      # milliseconds
 
-    def __init__(self, SerialPort, Baudrate, Logpath='gmsHat.log'):
+    def __init__(self, SerialPort, Baudrate, Logpath='gmsHat.log', http_timeout=120):
         self.__baudrate = Baudrate
         self.__port = SerialPort
+        self.http_timeout = http_timeout
 
         self.__logger = logging.getLogger(__name__)
         self.__logger.setLevel(logging.DEBUG)
@@ -674,7 +675,7 @@ class GSMHat:
 
             elif self.__state == 72:
                 if self.__waitForUnlock():
-                    if self.__sendToHat('AT+HTTPPARA="TIMEOUT",540'):
+                    if self.__sendToHat(f'AT+HTTPPARA="TIMEOUT",{self.http_timeout}'):
                         self.__state = self.__state + 1
 
             elif self.__state == 73:
