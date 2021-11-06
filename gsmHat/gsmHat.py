@@ -383,8 +383,6 @@ class GSMHat:
 
                         try:
                             newGPS.Altitude = float(rawData[5])
-                            if newGPS.Altitude == 0.0:
-                                goodPosition = False
                         except:
                             self.__logger.debug('Altitude: Could not convert ' + rawData[5] + ' to float.')
 
