@@ -50,7 +50,7 @@ class GPS:
 
 class GSMHat:
     """GSM Hat Backend with SMS Functionality (for now)"""
-    
+
     regexGetSingleValue = r'([+][a-zA-Z\ ]+(:\ ))([\d]+)'
     regexGetAllValues = r'([+][a-zA-Z:\s]+)([\w\",\s+-\/:.]+)'
     timeoutSerial = 5
@@ -73,7 +73,7 @@ class GSMHat:
 
         self.__connect()
         self.__startWorking()
-    
+
     def __connect(self):
         self.__ser = serial.Serial(self.__port, self.__baudrate)
         self.__ser.flushInput()
@@ -83,7 +83,7 @@ class GSMHat:
 
     def __disconnect(self):
         self.__ser.close()
-    
+
     def __startWorking(self):
         self.__working = True
         self.__state = 1
@@ -137,7 +137,7 @@ class GSMHat:
             self.__logger.debug('Wait for Lock...   state: ' + str(self.__state) + ' senddata: ' + string)
             time.sleep(1)
             return False
-    
+
     def __pressPowerKey(self):
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(7, GPIO.OUT)
@@ -151,7 +151,7 @@ class GSMHat:
 
     def SMS_available(self):
         return len(self.__smsList)
-        
+
     def SMS_read(self):
         if self.SMS_available() > 0:
             retSMS = self.__smsList[0]
@@ -205,13 +205,13 @@ class GSMHat:
 
     def __startGPSUnit(self):
         self.__startGPS = True
-    
+
     def __startGPSsending(self):
         self.__GPSstartSending = True
 
     def __stopGPSsending(self):
         self.__GPSstopSending = True
-    
+
     def __collectGPSData(self):
         self.__GPScollectData = True
 
@@ -222,7 +222,7 @@ class GSMHat:
         self.__disconnect()
         self.__logger.info('Serial connection to '+self.__port+' closed')
         self.__stopWorking()
-    
+
     def __processData(self):
         if self.__serData != '':
             if self.__readRAW > 0:
@@ -258,7 +258,7 @@ class GSMHat:
                         # Lets terminate request before starting new one
                         self.__logger.info('Error after starting new HTTP Request.')
                         self.__writeLock = False
-                        self.__state = 75
+                        self.__state = 76
                 elif '+CME ERROR:' in self.__serData:
                     self.__writeLock = False
 
@@ -280,7 +280,7 @@ class GSMHat:
                     numSMS = int(rawData[0])
                     if numSMS > 0:
                         self.__smsToRead = 1
-                    
+
                 elif '+CMGR:' in self.__serData:
                     # read SMS content
                     match = re.findall(self.regexGetAllValues, self.__serData)
@@ -338,13 +338,13 @@ class GSMHat:
                     numSMS = int(rawData[1])
                     self.__logger.debug('New SMS in memory ' + storage + ' at position ' + str(numSMS))
                     self.__smsToRead = numSMS
-                
+
                 # GPS Data coming here
                 elif '+CGNSINF:' in self.__serData:
                     self.__logger.debug('New GPS Data:')
                     match = re.findall(self.regexGetAllValues, self.__serData)
                     rawData = match[0][1].split(',')
-                    if len(rawData) == 21:                    
+                    if len(rawData) == 21:
                         newGPS = GPS()
                         goodPosition = True
 
@@ -428,7 +428,7 @@ class GSMHat:
                             newGPS.Signal = float(rawData[18])/55.0
                         except:
                             self.__logger.debug('Signal: Could not convert ' + rawData[18] + ' to float.')
-                        
+
                         if goodPosition:
                             self.__GPSactualData = newGPS
 
@@ -529,7 +529,7 @@ class GSMHat:
                     else:
                         # Es gab eine neue SMS
                         self.__logger.info('New Message from ' + self.__smsToBuild.Sender + ' was received')
-                        self.__smsToBuild = None                        
+                        self.__smsToBuild = None
 
                     # Lösche die behandelte SMS an der Stelle
                     if self.__sendToHat('AT+CMGD='+str(self.__smsToRead)):
@@ -543,7 +543,7 @@ class GSMHat:
                         self.__smsToRead = self.__smsToRead + 1
 
                     self.__state = 97
-            
+
             elif self.__state == 30:
                 # SMS versenden
                 retSMS = self.__smsSendList[0]
@@ -576,7 +576,7 @@ class GSMHat:
                     self.__numberToCall = ''
                     self.__sendHangUp = True
                     self.__state = 97
-            
+
             elif self.__state == 43:
                 if self.__sendToHat('AT+CHUP'):
                     self.__state = 44
@@ -595,7 +595,7 @@ class GSMHat:
                     self.__logger.debug('GPS powered on')
                     self.__startGPS = False
                     self.__state = 97
-                
+
             elif self.__state == 52:
                 if self.__sendToHat('AT+CGNSTST=1'):
                     self.__state = 55
@@ -615,7 +615,7 @@ class GSMHat:
             elif self.__state == 55:
                 if self.__waitForUnlock():
                     self.__state = 97
-            
+
             elif self.__state == 60:
                 if self.__sendToHat('AT+SAPBR=2,1'):
                     self.__state = 61
@@ -640,26 +640,28 @@ class GSMHat:
                 if self.__waitForUnlock():
                     if self.__sendToHat('AT+SAPBR=3,1,"APN","' + self.__GPRSuserAPN + '"'):
                         self.__state = self.__state + 1
-            
+
             elif self.__state == 64:
                 if self.__waitForUnlock():
                     if self.__sendToHat('AT+SAPBR=3,1,"USER","' + self.__GPRSuserUSER + '"'):
                         self.__state = self.__state + 1
-            
+
             elif self.__state == 65:
                 if self.__waitForUnlock():
                     if self.__sendToHat('AT+SAPBR=3,1,"PWD","' + self.__GPRSuserPWD + '"'):
                         self.__state = self.__state + 1
-            
+
             elif self.__state == 66:
                 if self.__waitForUnlock():
                     if self.__sendToHat('AT+SAPBR=1,1'):
                         self.__state = self.__state + 1
-            
+
             elif self.__state == 67:
                 if self.__waitForUnlock():
                     self.__state = 97
 
+
+            # HTTP
             elif self.__state == 70:
                 # Call the first URL in List
                 if self.__sendToHat('AT+HTTPINIT'):
@@ -672,6 +674,11 @@ class GSMHat:
 
             elif self.__state == 72:
                 if self.__waitForUnlock():
+                    if self.__sendToHat('AT+HTTPPARA="TIMEOUT",540'):
+                        self.__state = self.__state + 1
+
+            elif self.__state == 73:
+                if self.__waitForUnlock():
                     getUrl = self.__GPRScallUrlList[0]
                     if self.__sendToHat('AT+HTTPPARA="URL","' + getUrl + '"'):
                         del self.__GPRScallUrlList[0]
@@ -679,31 +686,33 @@ class GSMHat:
                         self.__GPRSnewDataReceived = False
                         self.__GPRSgotHttpResponse = False
                         self.__state = self.__state + 1
-            
-            elif self.__state == 73:
+
+            elif self.__state == 74:
                 if self.__waitForUnlock():
                     if self.__sendToHat('AT+HTTPACTION=0'):
                         self.__state = 97
                         #self.__state = self.__state + 1
-            
-            elif self.__state == 74:
+
+            elif self.__state == 75:
                 if self.__waitForUnlock():
                     if self.__sendToHat('AT+HTTPREAD'):
                         self.__state = self.__state + 1
-            
-            elif self.__state == 75:
+
+            elif self.__state == 76:
                 # Close HTTP Request
                 if self.__waitForUnlock():
                     if self.__sendToHat('AT+HTTPTERM'):
                         self.__state = 97
                         self.__GPRSwaitForData = False
                         self.__GPRSnewDataReceived = False
+            # END HTTP
+
 
             elif self.__state == 97:
-                # Check if new SMS to send is there        
+                # Check if new SMS to send is there
                 if len(self.__smsSendList) > 0:
                     self.__state = 30
-                
+
                 # Check if we have to Call somebody
                 elif self.__numberToCall != '':
                     self.__state = 40
@@ -719,12 +728,12 @@ class GSMHat:
                 # Check if we should call some Urls
                 elif len(self.__GPRScallUrlList) > 0 and self.__GPRSready and self.__GPRSwaitForData == False:
                     self.__state = 70
-                
+
                 elif self.__GPRSwaitForData and self.__GPRSgotHttpResponse:
                     if self.__GPRSnewDataReceived:
-                        self.__state = 74
-                    else:
                         self.__state = 75
+                    else:
+                        self.__state = 76
 
                 # Check if GPS Unit should start
                 elif self.__startGPS:
@@ -745,11 +754,11 @@ class GSMHat:
                 elif actTime > self.__GPSwaittime:
                     self.__GPScollectData = True
                     self.__GPSwaittime = actTime + self.__GPStimeout
-                
+
                 elif actTime > self.__SMSwaittime:
                     self.__state = 2
                     self.__SMSwaittime = actTime + self.cSMSwaittime
-                
+
                 elif actTime > self.__GPRSwaittimeStatus:
                     self.__state = 60
                     self.__GPRSwaittimeStatus = actTime + self.cGPRSstatusWaittime
